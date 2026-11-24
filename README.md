@@ -1,20 +1,21 @@
 # Arcade
 
-Nine free browser games. No download, no sign-up.
+Ten free browser games. No download, no sign-up.
 
 **Play:** https://dustinclarence.github.io/arcade/
 
 | Game | What it is |
 |---|---|
-| [Dama](https://dustinclarence.github.io/arcade/dama/) | Filipino checkers (modern 8×8 rules): men capture forwards and backwards, flying kings, compulsory maximum capture. Play the computer or a friend. |
-| [Four in a Row](https://dustinclarence.github.io/arcade/four-in-a-row/) | Drop discs and connect four. The computer looks several moves ahead. |
-| [XOX (Tic-Tac-Toe)](https://dustinclarence.github.io/arcade/xox/) | Tic-tac-toe with an unbeatable computer, an easy mode and 2-player mode. |
+| [Dama](https://dustinclarence.github.io/arcade/dama/) | Filipino checkers (modern 8×8 rules): men capture forwards and backwards, flying kings, compulsory maximum capture. Play Red or White against the computer, or a friend. |
+| [Four in a Row](https://dustinclarence.github.io/arcade/four-in-a-row/) | Drop discs and connect four. Play first or second; the computer looks several moves ahead. |
+| [XOX (Tic-Tac-Toe)](https://dustinclarence.github.io/arcade/xox/) | Tic-tac-toe with an unbeatable computer, an easy mode and 2-player mode. Play X or O. |
 | [Pixel Snake](https://dustinclarence.github.io/arcade/snake/) | Classic snake with keyboard, swipe and on-screen controls. |
 | [Number Merge](https://dustinclarence.github.io/arcade/number-merge/) | Slide and merge tiles to reach 2048, with undo. |
-| [Sky Stack](https://dustinclarence.github.io/arcade/sky-stack/) | Drop swinging floors from a crane to build the tallest tower. |
+| [Sky Stack](https://dustinclarence.github.io/arcade/sky-stack/) | Drop swinging floors from a crane. The tower sways, and off-balance floors topple. |
 | [Paper Plane Dash](https://dustinclarence.github.io/arcade/paper-plane/) | One-tap flying through the gaps between pillars. |
 | [Marble Spiral](https://dustinclarence.github.io/arcade/marble-spiral/) | Shoot marbles into a rolling chain and match three to pop them. |
-| [Moonlit Cash Run](https://dustinclarence.github.io/arcade/moonlit-cash-run/) | 16-bit style chase through a big city with a camera that follows behind your car: grab the cash and escape the police. |
+| [Moonlit Cash Run](https://dustinclarence.github.io/arcade/moonlit-cash-run/) | 16-bit style chase through a big city with a camera that follows behind your car and adjustable steering: grab the cash and escape the police. |
+| [Upfern](https://dustinclarence.github.io/arcade/upfern/) | Endless jumper: bounce a little seed sprout from leaf to leaf, avoid thornbugs and climb as high as you can. |
 
 Every game explains how to play on its own page and lists the controls it supports. Depending on the game, you can use a keyboard, mouse, touch screen, or a mix of these.
 

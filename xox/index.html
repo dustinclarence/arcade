@@ -22,15 +22,15 @@
     </header>
     <main class="wrap layout">
       <section class="stage" aria-label="Game">
-        <div class="hud"><div class="chip"><span>X (you)</span><b id="s-x">0</b></div><div class="chip"><span>Draws</span><b id="s-draw">0</b></div><div class="chip"><span id="o-label">O (computer)</span><b id="s-o">0</b></div></div>
+        <div class="hud"><div class="chip"><span id="x-label">X (you)</span><b id="s-x">0</b></div><div class="chip"><span>Draws</span><b id="s-draw">0</b></div><div class="chip"><span id="o-label">O (computer)</span><b id="s-o">0</b></div></div>
         <p class="status" id="status" role="status">Your turn. You are X.</p>
-        <div class="xox" id="board" role="grid" aria-label="XOX board"></div>
+        <div class="xox" id="board" role="group" aria-label="XOX board"></div>
       </section>
       <aside class="panel">
         <div class="card">
           <h2>How to play</h2>
           <ol class="steps">
-            <li>You are <b>X</b> and go first.</li>
+            <li><b>X</b> always goes first. Choose under Game options whether you play X (first) or O (second).</li>
             <li>Click an empty square to place your mark.</li>
             <li>Get three in a row across, down or diagonally to win.</li>
             <li>Try <b>Unbeatable</b> mode: the best you can do is a draw!</li>
@@ -48,6 +48,7 @@
         <div class="card">
           <h2>Game options</h2>
           <div class="field"><span id="lbl-mode">Opponent</span><div class="seg" role="group" aria-labelledby="lbl-mode"><button type="button" data-mode="cpu" aria-pressed="true">Computer</button><button type="button" data-mode="two" aria-pressed="false">2 Players</button></div></div>
+          <div class="field"><span id="lbl-side">Your side (vs computer)</span><div class="seg" role="group" aria-labelledby="lbl-side"><button type="button" data-side="X" aria-pressed="true">X · first</button><button type="button" data-side="O" aria-pressed="false">O · second</button></div></div>
           <div class="field"><span id="lbl-level">Computer level</span><div class="seg" role="group" aria-labelledby="lbl-level"><button type="button" data-level="easy" aria-pressed="true">Easy</button><button type="button" data-level="hard" aria-pressed="false">Unbeatable</button></div></div>
           <div class="row"><button type="button" class="btn btn--primary" id="new">Next round</button><button type="button" class="btn" id="reset">Reset score</button></div>
         </div>

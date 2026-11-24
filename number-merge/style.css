@@ -1,8 +1,39 @@
-.grid-wrap { max-width: 480px; aspect-ratio: 1; padding: 12px; background: #2a3247; }
-.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 100%; height: 100%; touch-action: none; }
-.tile { display: grid; place-items: center; border-radius: 12px; background: rgba(255, 255, 255, 0.06); font-family: var(--display); font-weight: 700; font-size: clamp(1.4rem, 6vw, 2.4rem); color: #1b1408; user-select: none; }
-.tile.new { animation: pop-in 0.18s ease-out; }
-.tile.merged { animation: pop 0.2s ease-out; }
+.grid-wrap { max-width: 480px; aspect-ratio: 1; padding: 12px; background: #2a3247; --gap: 12px; --slide: 130ms; }
+.grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  gap: var(--gap);
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+.cell { min-width: 0; min-height: 0; border-radius: 12px; background: rgba(255, 255, 255, 0.06); }
+
+/* moving tiles sit on a layer above the empty cells */
+.tiles { position: absolute; inset: 0; pointer-events: none; }
+.tile {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc((100% - 3 * var(--gap)) / 4);
+  height: calc((100% - 3 * var(--gap)) / 4);
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(1.4rem, 6vw, 2.4rem);
+  line-height: 1;
+  color: #1b1408;
+  user-select: none;
+  transform: translate(calc(var(--x) * (100% + var(--gap))), calc(var(--y) * (100% + var(--gap))));
+  transition: transform var(--slide) ease-in-out;
+  will-change: transform;
+}
+.tile.new { animation: pop-in 0.16s ease-out; }
+.tile.merged { animation: pop 0.18s ease-out; z-index: 2; }
 .tile[data-v='2'] { background: #f3ece2; }
 .tile[data-v='4'] { background: #f1dfc0; }
 .tile[data-v='8'] { background: #ffb27a; color: #fff; }
@@ -15,5 +46,6 @@
 .tile[data-v='1024'] { background: #3db0e8; color: #fff; font-size: clamp(1rem, 4vw, 1.6rem); }
 .tile[data-v='2048'] { background: #7b6cff; color: #fff; font-size: clamp(1rem, 4vw, 1.6rem); box-shadow: 0 0 24px rgba(123, 108, 255, 0.7); }
 .tile.big { background: #1b1f2e; color: #ffc857; font-size: clamp(0.9rem, 3.4vw, 1.4rem); }
-@keyframes pop-in { from { transform: scale(0.3); opacity: 0; } }
-@keyframes pop { 50% { transform: scale(1.15); } }
+/* the pop uses `scale` so it never fights the sliding `transform` */
+@keyframes pop-in { from { scale: 0.3; opacity: 0; } }
+@keyframes pop { 50% { scale: 1.15; } }

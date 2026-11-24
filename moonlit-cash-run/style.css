@@ -1,2 +1,7 @@
 .screen { max-width: 760px; }
 .screen canvas { image-rendering: pixelated; }
+
+/* steering sensitivity slider */
+#lbl-steer { font-size: 0.8rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+#lbl-steer output { color: var(--text); text-transform: none; letter-spacing: 0; }
+#steer { width: 100%; accent-color: var(--accent); min-height: 2rem; }

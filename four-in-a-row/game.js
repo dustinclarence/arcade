@@ -2,6 +2,9 @@
 const $ = (id) => document.getElementById(id);
 const COLS = 7, ROWS = 6, YOU = 1, OPP = 2;
 let grid, turn, over, busy, mode = 'cpu', level = 'hard', lastDrop = null, winCells = [];
+let humanFirst = true; // Red always drops first; you choose Red (first) or Yellow (second)
+const firstP = () => (mode === 'two' || humanFirst ? YOU : OPP);
+const colorName = (p) => (p === firstP() ? 'Red' : 'Yellow');
 const score = { you: 0, opp: 0, draw: 0 };
 
 const boardEl = $('board');
@@ -116,7 +119,7 @@ function render() {
       if (!v) { disc?.remove(); return; }
       if (!disc) {
         const d = document.createElement('div');
-        d.className = 'disc ' + (v === YOU ? 'red' : 'yellow');
+        d.className = 'disc ' + (v === firstP() ? 'red' : 'yellow');
         if (lastDrop && lastDrop[0] === r && lastDrop[1] === c && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
           d.classList.add('drop');
           d.style.setProperty('--from', `${-(r + 1) * 115}%`);
@@ -125,12 +128,14 @@ function render() {
         cell.append(d);
       }
       cell.firstElementChild.classList.toggle('win', winCells.some(([a, b]) => a === r && b === c));
+      cell.firstElementChild.classList.toggle('last', !!lastDrop && lastDrop[0] === r && lastDrop[1] === c && !winCells.length);
     });
   });
   $('s-you').textContent = score.you;
   $('s-opp').textContent = score.opp;
   $('s-draw').textContent = score.draw;
-  $('opp-label').textContent = mode === 'cpu' ? 'Computer' : 'Yellow';
+  $('you-label').textContent = mode === 'cpu' ? `You (${colorName(YOU)})` : 'Red';
+  $('opp-label').textContent = mode === 'cpu' ? `Computer (${colorName(OPP)})` : 'Yellow';
 }
 
 function drop(c) {
@@ -144,14 +149,14 @@ function drop(c) {
     winCells = line;
     if (turn === YOU) score.you++;
     else score.opp++;
-    setStatus(mode === 'cpu' ? (turn === YOU ? 'You win! 🎉 Press New game to play again.' : 'The computer wins. Try again!') : `${turn === YOU ? 'Red' : 'Yellow'} wins! 🎉`, turn === YOU || mode === 'two' ? 'win' : 'lose');
+    setStatus(mode === 'cpu' ? (turn === YOU ? 'You win! 🎉 Press New game to play again.' : 'The computer wins. Try again!') : `${colorName(turn)} wins! 🎉`, turn === YOU || mode === 'two' ? 'win' : 'lose');
   } else if (full(grid)) {
     over = true;
     score.draw++;
     setStatus('It\'s a draw. Press New game to play again.');
   } else {
     turn = turn === YOU ? OPP : YOU;
-    setStatus(mode === 'cpu' ? (turn === YOU ? 'Your turn. Choose a column.' : 'Computer is thinking…') : `${turn === YOU ? 'Red' : 'Yellow'}'s turn.`);
+    setStatus(mode === 'cpu' ? (turn === YOU ? 'Your turn. Choose a column.' : 'Computer is thinking…') : `${colorName(turn)}'s turn.`);
   }
   render();
   if (!over && mode === 'cpu' && turn === OPP) {
@@ -175,13 +180,21 @@ document.addEventListener('keydown', (e) => {
 
 function start() {
   grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
-  turn = YOU;
+  turn = firstP();
   over = false;
   busy = false;
   lastDrop = null;
   winCells = [];
-  setStatus(mode === 'cpu' ? 'Your turn. Choose a column.' : "Red's turn.");
+  setStatus(mode === 'cpu' ? (turn === YOU ? 'Your turn. You are Red, so you go first.' : 'The computer is Red and goes first…') : "Red's turn.");
   render();
+  if (mode === 'cpu' && turn === OPP) {
+    busy = true;
+    render();
+    setTimeout(() => {
+      busy = false;
+      drop(cpuColumn());
+    }, 600);
+  }
 }
 $('new').addEventListener('click', start);
 $('reset').addEventListener('click', () => {
@@ -193,6 +206,13 @@ document.querySelectorAll('[data-mode]').forEach((b) =>
     mode = b.dataset.mode;
     document.querySelectorAll('[data-mode]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     score.you = score.opp = score.draw = 0;
+    start();
+  }),
+);
+document.querySelectorAll('[data-side]').forEach((b) =>
+  b.addEventListener('click', () => {
+    humanFirst = b.dataset.side === 'first';
+    document.querySelectorAll('[data-side]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     start();
   }),
 );

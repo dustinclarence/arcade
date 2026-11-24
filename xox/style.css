@@ -1,6 +1,7 @@
 .xox {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
   gap: 10px;
   width: min(100%, 460px);
   aspect-ratio: 1;
@@ -11,6 +12,8 @@
   box-shadow: 0 30px 60px -30px #000;
 }
 .cellx {
+  min-width: 0;
+  min-height: 0;
   display: grid;
   place-items: center;
   border: 0;
@@ -26,3 +29,4 @@
 .cellx svg path, .cellx svg circle { stroke-dasharray: 300; stroke-dashoffset: 0; animation: draw 0.35s ease-out; }
 .cellx.win { background: rgba(255, 200, 87, 0.22); box-shadow: inset 0 0 0 3px var(--gold); }
 @keyframes draw { from { stroke-dashoffset: 300; } }
+.cellx.last { box-shadow: inset 0 0 0 3px rgba(255, 200, 87, 0.75); }

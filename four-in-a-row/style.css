@@ -1,6 +1,6 @@
 .c4 {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 2%;
   width: min(100%, 620px);
   padding: 2.4%;
@@ -8,7 +8,7 @@
   background: linear-gradient(160deg, #2f5bd3, #1d3c9a);
   box-shadow: 0 30px 60px -30px #000, inset 0 -6px 0 rgba(0, 0, 0, 0.25);
 }
-.col { display: grid; grid-template-rows: repeat(6, 1fr); gap: 6%; padding: 0; border: 0; border-radius: 12px; background: transparent; transition: background-color 0.15s; }
+.col { display: grid; min-width: 0; grid-template-rows: repeat(6, minmax(0, 1fr)); gap: 6%; padding: 0; border: 0; border-radius: 12px; background: transparent; transition: background-color 0.15s; }
 .col:hover, .col:focus-visible { background: rgba(255, 255, 255, 0.1); }
 .col:disabled { cursor: default; }
 .cell { position: relative; aspect-ratio: 1; border-radius: 50%; background: #0f1420; box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.6); overflow: hidden; }
@@ -20,3 +20,4 @@
 .col:hover .cell.preview { box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.6), inset 0 0 0 4px rgba(255, 255, 255, 0.35); }
 @keyframes drop { from { transform: translateY(var(--from, -600%)); } }
 @keyframes glow { to { transform: scale(0.9); } }
+.disc.last { box-shadow: 0 0 0 3px rgba(255, 200, 87, 0.95); }

@@ -22,16 +22,16 @@
     </header>
     <main class="wrap layout">
       <section class="stage" aria-label="Game">
-        <div class="hud"><div class="chip"><span>Red (you)</span><b id="red-count">12</b></div><div class="chip"><span>White</span><b id="white-count">12</b></div></div>
+        <div class="hud"><div class="chip"><span id="red-label">Red (you)</span><b id="red-count">12</b></div><div class="chip"><span id="white-label">White (computer)</span><b id="white-count">12</b></div></div>
         <p class="status" id="status" role="status">Your turn. Pick a red piece.</p>
-        <div class="board" id="board" role="grid" aria-label="Dama board"></div>
+        <div class="board" id="board" role="group" aria-label="Dama board"></div>
       </section>
       <aside class="panel">
         <div class="card">
           <h2>How to play</h2>
           <ol class="steps">
-            <li>You play <b>Red</b> and move first (in this version).</li>
-            <li>Click one of your pieces. The green dots show where it can go.</li>
+            <li>Choose your side under Game options. In this version <b>Red always moves first</b> (house rules differ on which colour starts). Your pieces are always at the bottom.</li>
+            <li>Click one of your pieces. The green dots show where it can go. The last move is outlined in gold.</li>
             <li>Pieces move one square diagonally <b>forward</b>.</li>
             <li>Capture by jumping over an opponent's piece. Pieces can capture <b>forwards and backwards</b>, and can keep jumping.</li>
             <li>If you can capture, you <b>must</b>, and you must choose the move that captures the <b>most</b> pieces.</li>
@@ -50,6 +50,7 @@
         <div class="card">
           <h2>Game options</h2>
           <div class="field"><span id="lbl-mode">Opponent</span><div class="seg" role="group" aria-labelledby="lbl-mode"><button type="button" data-mode="cpu" aria-pressed="true">Computer</button><button type="button" data-mode="two" aria-pressed="false">2 Players</button></div></div>
+          <div class="field"><span id="lbl-side">Your side (vs computer)</span><div class="seg" role="group" aria-labelledby="lbl-side"><button type="button" data-side="red" aria-pressed="true">Red · first</button><button type="button" data-side="white" aria-pressed="false">White · second</button></div></div>
           <div class="field"><span id="lbl-level">Computer level</span><div class="seg" role="group" aria-labelledby="lbl-level"><button type="button" data-level="easy" aria-pressed="true">Easy</button><button type="button" data-level="hard" aria-pressed="false">Hard</button></div></div>
           <div class="row"><button type="button" class="btn btn--primary" id="new">New game</button><button type="button" class="btn" id="undo">Undo</button></div>
         </div>

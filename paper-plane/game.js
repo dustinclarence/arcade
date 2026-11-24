@@ -3,7 +3,9 @@ const $ = (id) => document.getElementById(id);
 const canvas = $('game');
 const g = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height, GROUND = H - 70;
-const GRAVITY = 1500, LIFT = -430, PW = 70;
+// Tuned to feel like the classic one-tap flyers: strong gravity, a sharp flap, a capped fall speed,
+// narrow gaps (about a quarter of the play height), constant speed and exact hit boxes.
+const GRAVITY = 1750, LIFT = -470, MAX_FALL = 640, PW = 70, CAP = 16, SPACING = 245;
 
 let state = 'ready', plane, pillars, score, best = 0, spawnT, scroll, lastTime = 0, flash = 0;
 try { best = +localStorage.getItem('plane-best') || 0; } catch { /* storage blocked */ }
@@ -18,10 +20,10 @@ function reset() {
   $('score').textContent = 0;
 }
 function gap() {
-  return Math.max(150, 200 - score * 2.2);
+  return Math.max(128, 152 - score); // shrinks a little as your score goes up
 }
 function speed() {
-  return Math.min(260, 170 + score * 3);
+  return 195; // constant, like the classic
 }
 function flap() {
   if (state === 'ready') return;
@@ -46,30 +48,41 @@ function die() {
   }, 550);
 }
 
+window.__plane = { get: () => ({ plane, pillars, score, state }) };
 function update(dt) {
   scroll += speed() * dt;
   if (state !== 'play') return;
-  plane.vy += GRAVITY * dt;
+  plane.vy = Math.min(MAX_FALL, plane.vy + GRAVITY * dt);
   plane.y += plane.vy * dt;
   spawnT -= dt;
   if (spawnT <= 0) {
     const gp = gap();
-    const top = 70 + Math.random() * (GROUND - gp - 140);
+    const lo = 60, hi = GROUND - gp - 60;
+    const prevTop = pillars.length ? pillars[pillars.length - 1].top : (lo + hi) / 2;
+    // the next gap can be far from the last one, but always reachable
+    const top = Math.max(lo, Math.min(hi, prevTop + (Math.random() * 2 - 1) * 170));
     pillars.push({ x: W + 20, top, gap: gp, passed: false });
-    spawnT = 1.45;
+    spawnT = SPACING / speed();
   }
   pillars.forEach((p) => (p.x -= speed() * dt));
   pillars = pillars.filter((p) => p.x > -PW - 10);
-  // scoring + collisions (slightly forgiving hit box)
-  const r = { x: plane.x - 18, y: plane.y - 9, w: 36, h: 18 };
+  // scoring + collisions: the hit box matches the plane, and the wider pillar caps count too
+  const r = { x: plane.x - 19, y: plane.y - 11, w: 42, h: 21 };
+  const hits = (x, y, w, h) => r.x < x + w && r.x + r.w > x && r.y < y + h && r.y + r.h > y;
   for (const p of pillars) {
     if (!p.passed && p.x + PW < plane.x) {
       p.passed = true;
       score++;
       $('score').textContent = score;
     }
-    const inX = r.x + r.w > p.x + 4 && r.x < p.x + PW - 4;
-    if (inX && (r.y < p.top || r.y + r.h > p.top + p.gap)) return die();
+    const bottomY = p.top + p.gap;
+    if (
+      hits(p.x, -200, PW, p.top + 200) ||
+      hits(p.x - 6, p.top - CAP, PW + 12, CAP) ||
+      hits(p.x, bottomY, PW, GROUND - bottomY) ||
+      hits(p.x - 6, bottomY, PW + 12, CAP)
+    )
+      return die();
   }
   if (plane.y < 14) {
     // the top of the screen is a soft ceiling, not a crash
@@ -213,7 +226,7 @@ if (new URLSearchParams(location.search).get('demo') === '1') {
   $('score').textContent = score;
   plane.y = 300;
   plane.vy = -120;
-  pillars = [{ x: 190, top: 200, gap: 190, passed: false }, { x: 430, top: 140, gap: 190, passed: false }];
+  pillars = [{ x: 190, top: 220, gap: 150, passed: false }, { x: 435, top: 150, gap: 150, passed: false }];
   scroll = 300;
   $('overlay').hidden = true;
 }

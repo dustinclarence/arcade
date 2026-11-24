@@ -35,6 +35,11 @@ const tileCenter = (tx, ty) => ({ x: tx * T + T / 2, y: ty * T + T / 2 });
 /* ---------- state ---------- */
 let state = 'ready', car, cops, bag, cash, bags, lives, timeLeft, invuln, dist, distTimer = 0, lastTime = 0, keys = {}, popups, sirenT = 0;
 let camMode = 'chase'; // 'chase' = behind the car, 'top' = classic top-down
+let steerSens = 1; // steering sensitivity (0.5 = gentle, 2 = sharp), saved on this device
+try {
+  const saved = parseFloat(localStorage.getItem('cashrun-steer'));
+  if (saved >= 0.5 && saved <= 2) steerSens = saved;
+} catch { /* storage blocked */ }
 let camAngle = -Math.PI / 2;
 try {
   if (localStorage.getItem('cashrun-camera') === 'top') camMode = 'top';
@@ -118,16 +123,40 @@ function update(dt) {
   else if (keys.down) car.v = Math.max(REV, car.v - ACC * 1.4 * dt);
   else car.v *= Math.pow(0.35, dt);
   const steer = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-  // steering strength grows with speed and flips when reversing, like a real car
-  car.a += steer * 2.8 * dt * Math.max(-1, Math.min(1, car.v / 90));
-  const nx = car.x + Math.cos(car.a) * car.v * dt, ny = car.y + Math.sin(car.a) * car.v * dt;
-  const corners = (x, y) => [[x + 11, y + 11], [x - 11, y + 11], [x + 11, y - 11], [x - 11, y - 11]];
+  // Steering grows with speed and flips when reversing, like a real car. It never drops to zero,
+  // so the car can always turn its nose away from a wall or out of a corner, even when stopped.
+  const speedFactor = Math.min(1, Math.abs(car.v) / 90);
+  const turnDir = car.v < -8 ? -1 : 1;
+  car.a += steer * 2.8 * steerSens * dt * turnDir * Math.max(0.6, speedFactor);
+
+  // Move in small sub-steps so the car can never pass through a wall between frames.
+  const blocked = (x, y) => [[x + 11, y + 11], [x - 11, y + 11], [x + 11, y - 11], [x - 11, y - 11]].some(([px, py]) => solidAt(px, py));
+  const travel = Math.abs(car.v) * dt;
+  const steps = Math.max(1, Math.ceil(travel / 4));
+  const sx = (Math.cos(car.a) * car.v * dt) / steps, sy = (Math.sin(car.a) * car.v * dt) / steps;
   let bumped = false;
-  if (!corners(nx, car.y).some(([x, y]) => solidAt(x, y))) car.x = nx;
-  else bumped = true;
-  if (!corners(car.x, ny).some(([x, y]) => solidAt(x, y))) car.y = ny;
-  else bumped = true;
-  if (bumped) car.v *= 0.55; // slide along walls instead of bouncing back
+  for (let k = 0; k < steps; k++) {
+    // each axis is resolved on its own, so the car slides along walls instead of sticking
+    if (!blocked(car.x + sx, car.y)) car.x += sx;
+    else {
+      bumped = true;
+      // corner assist: if only a building corner is in the way, ease the car around it
+      for (const n of [3, -3, 6, -6, 9, -9]) if (!blocked(car.x, car.y + n) && !blocked(car.x + sx, car.y + n)) { car.y += Math.sign(n) * Math.min(Math.abs(n), 2); break; }
+    }
+    if (!blocked(car.x, car.y + sy)) car.y += sy;
+    else {
+      bumped = true;
+      for (const n of [3, -3, 6, -6, 9, -9]) if (!blocked(car.x + n, car.y) && !blocked(car.x + n, car.y + sy)) { car.x += Math.sign(n) * Math.min(Math.abs(n), 2); break; }
+    }
+  }
+  // Safety net: if the car ever ends up inside a building, push it back to the nearest free spot.
+  if (blocked(car.x, car.y)) {
+    outer: for (let r = 2; r <= 24; r += 2)
+      for (const [dx, dy] of [[r, 0], [-r, 0], [0, r], [0, -r], [r, r], [-r, r], [r, -r], [-r, -r]])
+        if (!blocked(car.x + dx, car.y + dy)) { car.x += dx; car.y += dy; break outer; }
+  }
+  // scraping a wall slows the car gently instead of stopping it dead
+  if (bumped) car.v *= Math.pow(0.25, dt);
 
   // the chase camera turns smoothly to follow the car
   let diff = car.a - camAngle;
@@ -518,7 +547,22 @@ car = { x: START.x + T * 3, y: START.y, a: 0, v: 0 };
 reset();
 setCamera(camMode);
 requestAnimationFrame(loop);
-window.__city = { map, solidAt, peek: () => ({ car, bag, cops }), setCamera };
+const sensEl = $('steer');
+if (sensEl) {
+  sensEl.value = String(steerSens);
+  const showSens = () => {
+    const v = +sensEl.value;
+    $('steer-out').textContent = v === 1 ? 'Normal' : v < 1 ? `Gentle (${v.toFixed(2)}×)` : `Sharp (${v.toFixed(2)}×)`;
+    sensEl.setAttribute('aria-valuetext', $('steer-out').textContent);
+  };
+  showSens();
+  sensEl.addEventListener('input', () => {
+    steerSens = +sensEl.value;
+    showSens();
+    try { localStorage.setItem('cashrun-steer', String(steerSens)); } catch { /* ignore */ }
+  });
+}
+window.__city = { map, solidAt, peek: () => ({ car, bag, cops }), setCamera, setKeys: (o) => Object.assign(keys, o), step: (dt) => update(dt), setState: (v) => (state = v) };
 
 // ?demo=1 shows a still mid-game scene (used for the portfolio preview image).
 if (new URLSearchParams(location.search).get('demo') === '1') {

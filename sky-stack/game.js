@@ -7,6 +7,9 @@ const BW = 132, BH = 46, TOP_Y = 430; // tower top is drawn at this screen heigh
 const PALETTE = ['#ff7a59', '#4fd1b5', '#5b8cff', '#ffc857', '#ff6b9a', '#9b8cff'];
 
 let state = 'ready', tower, lives, best = 0, swingT, falling, camera, camTarget, popups, debris, raf = 0, lastTime = 0, combo;
+// Tower sway: the tower pivots at its base. It leans towards its heavy side (centre of mass),
+// sways more the taller it gets, and every landing gives it a wobble that slowly dies down.
+let lean = 0, kick = 0, kickV = 0, swayClock = 0, theta = 0;
 try { best = +localStorage.getItem('stack-best') || 0; } catch { /* storage blocked */ }
 $('best').textContent = best;
 
@@ -20,6 +23,7 @@ function reset() {
   popups = [];
   debris = [];
   combo = 0;
+  lean = kick = kickV = swayClock = theta = 0;
   updateHud();
 }
 const floors = () => tower.length - 1;
@@ -46,11 +50,50 @@ function drop() {
   falling = { x: h.x, y: h.y, vy: 0, color: PALETTE[floors() % PALETTE.length] };
 }
 
+/* ---------- sway geometry ---------- */
+const pivotPt = () => ({ x: tower[0].x, y: TOP_Y + camera - BH }); // top of the foundation
+// screen position of a point given in the tower's own (unrotated) frame
+function toScreen(lx, ly) {
+  const P = pivotPt(), c = Math.cos(theta), sn = Math.sin(theta);
+  return { x: P.x + lx * c - ly * sn, y: P.y + lx * sn + ly * c };
+}
+// where the top surface of the tower is right now (it moves while the tower sways)
+function topNow() {
+  const n = floors();
+  const top = tower[tower.length - 1];
+  return toScreen(top.x - tower[0].x, -n * BH);
+}
+// Centre-of-mass check: if the floors above any level have their centre of mass beyond the
+// edge of the floor that holds them up, they tip over. Returns that level, or -1 if stable.
+function unstableLevel() {
+  for (let i = 0; i < tower.length - 1; i++) {
+    const above = tower.slice(i + 1);
+    const com = above.reduce((s2, f) => s2 + f.x, 0) / above.length;
+    const half = i === 0 ? BW / 2 + 10 : BW / 2;
+    if (Math.abs(com - tower[i].x) > half) return i;
+  }
+  return -1;
+}
+function topple(level) {
+  const n = floors();
+  for (let i = tower.length - 1; i > level; i--) {
+    const f = tower[i];
+    const pos = toScreen(f.x - tower[0].x, -(i - 1) * BH - BH / 2);
+    const side = Math.sign(f.x - tower[level].x) || 1;
+    debris.push({ x: pos.x, y: pos.y, vy: -60 - (i - level) * 10, vx: side * (2.5 + Math.random()), rot: theta, color: f.color });
+  }
+  tower.length = level + 1;
+  popups.push({ text: n - level > 1 ? `${n - level} floors toppled!` : 'It toppled!', x: W / 2, y: 140, life: 1.2, bad: true });
+  kickV += 0.6 * (Math.random() < 0.5 ? -1 : 1);
+  camTarget = floors() * BH;
+}
+
 function land() {
   const top = tower[tower.length - 1];
-  const dx = falling.x - top.x;
+  const surf = topNow();
+  const dx = falling.x - surf.x;
   if (Math.abs(dx) < BW * 0.78) {
-    let x = falling.x;
+    let x = top.x + dx;
     let text = 'Nice!';
     if (Math.abs(dx) < 7) {
       x = top.x;
@@ -58,7 +101,19 @@ function land() {
       text = combo > 1 ? `Perfect ×${combo}!` : 'Perfect!';
     } else combo = 0;
     tower.push({ x, color: falling.color });
-    popups.push({ text, x, y: TOP_Y - BH, life: 1 });
+    // the landing pushes the tower sideways: off-centre drops make it wobble more
+    kickV += (dx / BW) * 1.1 + (Math.random() - 0.5) * 0.05;
+    const lvl = unstableLevel();
+    if (lvl >= 0) {
+      lives--;
+      combo = 0;
+      topple(lvl);
+      falling = null;
+      updateHud();
+      if (lives <= 0) return endGame();
+      return;
+    }
+    popups.push({ text, x: surf.x, y: TOP_Y - BH, life: 1 });
     camTarget = floors() * BH;
     if (floors() > best) {
       best = floors();
@@ -132,15 +187,23 @@ function draw() {
     g.fillStyle = '#121826';
     g.fillRect(0, groundY + BH * 0, W, H);
   }
-  // tower
-  tower.forEach((f, i) => {
-    const y = TOP_Y + camera - (i - 0) * BH + BH * 0;
-    if (y < -BH || y > H + BH) return;
-    if (i === 0) {
-      g.fillStyle = '#2a3550';
-      g.fillRect(f.x - BW / 2 - 10, y - BH, BW + 20, BH + 200);
-    } else drawFloor(f.x, y, f.color);
-  });
+  // tower: the foundation stays put, the floors above rotate around its top (the sway)
+  const base = tower[0];
+  const by = TOP_Y + camera;
+  if (by > -BH && by < H + BH * 6) {
+    g.fillStyle = '#2a3550';
+    g.fillRect(base.x - BW / 2 - 10, by - BH, BW + 20, BH + 200);
+  }
+  const P = pivotPt();
+  g.save();
+  g.translate(P.x, P.y);
+  g.rotate(theta);
+  for (let i = 1; i < tower.length; i++) {
+    const ly = -(i - 1) * BH; // bottom of floor i in the tower's frame
+    if (P.y + ly < -BH * 3 || P.y + ly > H + BH * 3) continue;
+    drawFloor(tower[i].x - base.x, ly, tower[i].color);
+  }
+  g.restore();
   // crane
   const p = pivot();
   g.strokeStyle = '#ffc857';
@@ -161,12 +224,12 @@ function draw() {
     g.stroke();
     drawFloor(h.x, h.y, PALETTE[floors() % PALETTE.length]);
     // guide line to help aim
-    const top = tower[tower.length - 1];
+    const surf = topNow();
     g.setLineDash([6, 8]);
     g.strokeStyle = 'rgba(255,255,255,0.25)';
     g.beginPath();
-    g.moveTo(top.x, TOP_Y - BH - 4);
-    g.lineTo(top.x, h.y + 6);
+    g.moveTo(surf.x, surf.y - 4);
+    g.lineTo(surf.x, h.y + 6);
     g.stroke();
     g.setLineDash([]);
   }
@@ -197,10 +260,25 @@ function loop(t) {
   const dt = Math.min(0.033, (t - lastTime) / 1000 || 0);
   lastTime = t;
   if (state === 'play') swingT += dt;
+  // sway physics
+  const n = floors();
+  if (n > 0) {
+    const com = tower.slice(1).reduce((s2, f) => s2 + f.x, 0) / n - tower[0].x;
+    const k = 30 / (1 + n * 0.06); // taller towers are springier and slower
+    const target = Math.max(-0.12, Math.min(0.12, (com / BW) * 0.05 * (1 + n * 0.05)));
+    lean += (target - lean) * Math.min(1, dt * 2.5);
+    kickV += (-k * kick - 1.5 * kickV) * dt;
+    kick += kickV * dt;
+    swayClock += dt * (2.3 / (1 + n * 0.02));
+    const idle = Math.min(0.06, n * 0.0022 + (Math.abs(com) / BW) * 0.05) * Math.sin(swayClock);
+    theta = Math.max(-0.4, Math.min(0.4, lean + kick + idle));
+  } else {
+    lean = kick = kickV = theta = 0;
+  }
   if (falling) {
     falling.vy += 1600 * dt;
     falling.y += falling.vy * dt;
-    const landY = TOP_Y + camera - floors() * BH - BH; // bottom of the next floor = top of the tower
+    const landY = topNow().y; // the top of the tower, wherever the sway has moved it
     if (falling.y >= landY) {
       falling.y = landY;
       land();
@@ -247,6 +325,7 @@ document.addEventListener('keydown', (e) => {
 });
 reset();
 raf = requestAnimationFrame(loop);
+window.__stack = { get: () => ({ tower, theta, lives, state }), drop, start, unstableLevel };
 
 
 // ?demo=1 shows a still mid-game scene (used for the portfolio preview image).
@@ -255,6 +334,7 @@ if (new URLSearchParams(location.search).get('demo') === '1') {
   const offs = [0, 6, -4, 10, 2, -8, 5];
   offs.forEach((o, i) => tower.push({ x: W / 2 + o, color: PALETTE[i % PALETTE.length] }));
   camera = camTarget = floors() * BH;
+  theta = 0.03;
   swingT = 0.55;
   state = 'play';
   updateHud();

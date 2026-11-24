@@ -22,15 +22,15 @@
     </header>
     <main class="wrap layout">
       <section class="stage" aria-label="Game">
-        <div class="hud"><div class="chip"><span>You</span><b id="s-you">0</b></div><div class="chip"><span>Draws</span><b id="s-draw">0</b></div><div class="chip"><span id="opp-label">Computer</span><b id="s-opp">0</b></div></div>
+        <div class="hud"><div class="chip"><span id="you-label">You (Red)</span><b id="s-you">0</b></div><div class="chip"><span>Draws</span><b id="s-draw">0</b></div><div class="chip"><span id="opp-label">Computer</span><b id="s-opp">0</b></div></div>
         <p class="status" id="status" role="status">Your turn. Choose a column.</p>
-        <div class="c4" id="board" role="grid" aria-label="Four in a Row board"></div>
+        <div class="c4" id="board" role="group" aria-label="Four in a Row board"></div>
       </section>
       <aside class="panel">
         <div class="card">
           <h2>How to play</h2>
           <ol class="steps">
-            <li>You play <b>Red</b> and go first.</li>
+            <li><b>Red</b> always goes first. Choose under Game options whether you play Red (first) or Yellow (second).</li>
             <li>Click any column to drop a disc. It falls to the lowest empty space.</li>
             <li>Take turns with the computer (or a friend).</li>
             <li>Connect <b>four</b> discs across, down or diagonally to win.</li>
@@ -48,6 +48,7 @@
         <div class="card">
           <h2>Game options</h2>
           <div class="field"><span id="lbl-mode">Opponent</span><div class="seg" role="group" aria-labelledby="lbl-mode"><button type="button" data-mode="cpu" aria-pressed="true">Computer</button><button type="button" data-mode="two" aria-pressed="false">2 Players</button></div></div>
+          <div class="field"><span id="lbl-side">Your side (vs computer)</span><div class="seg" role="group" aria-labelledby="lbl-side"><button type="button" data-side="first" aria-pressed="true">Red · first</button><button type="button" data-side="second" aria-pressed="false">Yellow · second</button></div></div>
           <div class="field"><span id="lbl-level">Computer level</span><div class="seg" role="group" aria-labelledby="lbl-level"><button type="button" data-level="easy" aria-pressed="false">Easy</button><button type="button" data-level="hard" aria-pressed="true">Hard</button></div></div>
           <div class="row"><button type="button" class="btn btn--primary" id="new">New game</button><button type="button" class="btn" id="reset">Reset score</button></div>
         </div>
