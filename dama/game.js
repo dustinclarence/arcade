@@ -336,4 +336,4 @@ document.querySelectorAll('[data-level]').forEach((b) =>
   }),
 );
 start();
-window.__dama = { legalMoves, apply, newBoard };
+window.__dama = { legalMoves, apply, newBoard, state: () => ({ board, turn, busy, over, human, mode }) };

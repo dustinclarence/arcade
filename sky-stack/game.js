@@ -325,7 +325,7 @@ document.addEventListener('keydown', (e) => {
 });
 reset();
 raf = requestAnimationFrame(loop);
-window.__stack = { get: () => ({ tower, theta, lives, state }), drop, start, unstableLevel };
+window.__stack = { get: () => ({ tower, theta, lives, state, falling }), drop, start, unstableLevel, hanging, topNow };
 
 
 // ?demo=1 shows a still mid-game scene (used for the portfolio preview image).

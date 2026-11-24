@@ -314,3 +314,5 @@ $('start').addEventListener('click', () => {
 score = 0;
 startLevel();
 requestAnimationFrame(loop);
+// test hook (used by automated checks)
+window.__marble = { get: () => ({ chain, current, shot, state, CX, CY }), at, aimAt: (x, y) => (aim = { x, y }), shoot };

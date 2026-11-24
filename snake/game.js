@@ -198,6 +198,8 @@ document.querySelectorAll('[data-speed]').forEach((b) =>
 reset();
 draw();
 raf = requestAnimationFrame(loop);
+// test hook (read-only view of the game, used by automated checks)
+window.__snake = { get: () => ({ snake, food, dir, running, N }), turn, start };
 
 
 // ?demo=1 shows a still mid-game scene (used for the portfolio preview image).
