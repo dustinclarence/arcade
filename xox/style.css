@@ -1,0 +1,28 @@
+.xox {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: min(100%, 460px);
+  aspect-ratio: 1;
+  padding: 10px;
+  border-radius: 22px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: 0 30px 60px -30px #000;
+}
+.cellx {
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 16px;
+  background: var(--card-2);
+  transition: background-color 0.2s, transform 0.15s;
+}
+.cellx:not(:disabled):hover { background: #2a3550; transform: scale(0.97); }
+.cellx:disabled { cursor: default; }
+.cellx svg { width: 62%; height: 62%; fill: none; stroke-width: 12; stroke-linecap: round; }
+.cellx .x { stroke: var(--accent); }
+.cellx .o { stroke: var(--teal); }
+.cellx svg path, .cellx svg circle { stroke-dasharray: 300; stroke-dashoffset: 0; animation: draw 0.35s ease-out; }
+.cellx.win { background: rgba(255, 200, 87, 0.22); box-shadow: inset 0 0 0 3px var(--gold); }
+@keyframes draw { from { stroke-dashoffset: 300; } }

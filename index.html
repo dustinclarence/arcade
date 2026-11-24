@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arcade · 9 browser games by Dustin Clarence Costo</title>
+    <meta name="description" content="Nine free browser games: Dama, Four in a Row, XOX, Pixel Snake, Number Merge, Sky Stack, Paper Plane Dash, Marble Spiral and Neon Getaway. No download needed." />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="shared.css" />
+    <style>
+      .hero { padding: 2.5rem 0 1rem; text-align: center; }
+      .hero h1 { font-family: var(--display); font-size: clamp(2.6rem, 8vw, 4.4rem); line-height: 1; }
+      .hero h1 span { background: linear-gradient(90deg, var(--accent), var(--gold), var(--teal), var(--blue)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      .hero p { color: var(--muted); margin: 0.7rem auto 0; max-width: 52ch; }
+      .games { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.1rem; list-style: none; margin: 2rem 0 3rem; padding: 0; }
+      .game { position: relative; display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; background: var(--card); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s; }
+      .game:hover, .game:focus-visible { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 24px 40px -24px #000; }
+      .game__art { display: grid; place-items: center; aspect-ratio: 16 / 10; background: var(--c1); }
+      .game__art svg { width: 46%; height: auto; }
+      .game__body { padding: 1rem 1.1rem 1.15rem; display: grid; gap: 0.3rem; }
+      .game__body h2 { font-family: var(--display); font-size: 1.3rem; }
+      .game__body p { color: var(--muted); font-size: 0.92rem; }
+      .tag { justify-self: start; margin-top: 0.4rem; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 800; background: var(--card-2); color: var(--gold); }
+      .play { position: absolute; top: 0.8rem; right: 0.8rem; padding: 0.3rem 0.75rem; border-radius: 999px; background: rgba(15, 20, 32, 0.75); font-weight: 900; font-size: 0.8rem; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="hero">
+        <h1><span>Arcade</span></h1>
+        <p>Nine free games that run in your browser. No download, no sign-up. Pick one and press play. Every game shows you how to play on the right side of the screen.</p>
+      </header>
+      <ul class="games">
+        <li><a class="game" href="dama/" style="--c1: linear-gradient(135deg,#8a5a3b,#5a3a22)"><span class="play">Play ▶</span><div class="game__art"><svg viewBox="0 0 100 70" aria-hidden="true"><circle cx="30" cy="35" r="18" fill="#e5372a"/><circle cx="30" cy="31" r="18" fill="#ff8a7a"/><circle cx="70" cy="35" r="18" fill="#b9b0a0"/><circle cx="70" cy="31" r="18" fill="#fff"/><text x="70" y="38" font-size="18" text-anchor="middle" fill="#9c1f16">★</text></svg></div><div class="game__body"><h2>Dama</h2><p>Classic checkers. Jump, capture and crown your pieces.</p><span class="tag">Board · vs computer or friend</span></div></a></li>
+        <li><a class="game" href="four-in-a-row/" style="--c1: linear-gradient(135deg,#2f5bd3,#1d3c9a)"><span class="play">Play ▶</span><div class="game__art"><svg viewBox="0 0 100 70" aria-hidden="true"><g fill="#0f1420"><circle cx="20" cy="20" r="8"/><circle cx="40" cy="20" r="8"/><circle cx="60" cy="20" r="8"/><circle cx="80" cy="20" r="8"/></g><circle cx="20" cy="50" r="8" fill="#e5372a"/><circle cx="40" cy="50" r="8" fill="#ffc81f"/><circle cx="60" cy="50" r="8" fill="#e5372a"/><circle cx="80" cy="50" r="8" fill="#e5372a"/><circle cx="40" cy="35" r="8" fill="#e5372a"/><circle cx="60" cy="35" r="8" fill="#ffc81f"/></svg></div><div class="game__body"><h2>Four in a Row</h2><p>Drop discs and connect four before your opponent.</p><span class="tag">Board · vs computer or friend</span></div></a></li>
+        <li><a class="game" href="xox/" style="--c1: linear-gradient(135deg,#243049,#182033)"><span class="play">Play ▶</span><div class="game__art"><svg viewBox="0 0 100 70" aria-hidden="true" fill="none" stroke-linecap="round" stroke-width="7"><path d="M14 14 36 36M36 14 14 36" stroke="#ff7a59"/><circle cx="66" cy="25" r="12" stroke="#4fd1b5"/><path d="M48 44 70 66M70 44 48 66" stroke="#ff7a59"/></svg></div><div class="game__body"><h2>XOX</h2><p>Tic-tac-toe. Can you beat the unbeatable computer?</p><span class="tag">Quick · 1 minute</span></div></a></li>
+        <li><a class="game" href="snake/" style="--c1: linear-gradient(135deg,#1c2a3f,#132033)"><span class="play">Play ▶</span><div class="game__art"><svg viewBox="0 0 100 70" aria-hidden="true"><g fill="#4fd1b5"><rect x="10" y="40" width="14" height="14" rx="4"/><rect x="26" y="40" width="14" height="14" rx="4"/><rect x="42" y="40" width="14" height="14" rx="4"/><rect x="42" y="24" width="14" height="14" rx="4"/><rect x="58" y="24" width="14" height="14" rx="4"/></g><circle cx="86" cy="31" r="7" fill="#ff5a4f"/></svg></div><div class="game__body"><h2>Pixel Snake</h2><p>Eat the fruit, grow longer, don't bite your tail.</p><span class="tag">Classic · keyboard or swipe</span></div></a></li>
+        <li><a class="game" href="number-merge/" style="--c1: linear-gradient(135deg,#2a3247,#1e2436)"><span class="play">Play ▶</span><div class="game__art"><svg viewBox="0 0 100 70" aria-hidden="true" font-family="Fredoka, sans-serif" font-weight="700" text-anchor="middle"><rect x="10" y="10" width="36" height="24" rx="5" fill="#f3ece2"/><text x="28" y="28" font-size="15" fill="#1b1408">2</text><rect x="54" y="10" width="36" height="24" rx="5" fill="#ff9157"/><text x="72" y="28" font-size="15" fill="#fff">16</text><rect x="10" y="38" width="36" height="24" rx="5" fill="#4fd1b5"/><text x="28" y="56" font-size="13" fill="#fff">512</text><rect x="54" y="38" width="36" height="24" rx="5" fill="#7b6cff"/><text x="72" y="56" font-size="12" fill="#fff">2048</text></svg></div><div class="game__body"><h2>Number Merge</h2><p>Slide and merge matching tiles to reach 2048.</p><span class="tag">Puzzle · keyboard or swipe</span></div></a></li>
+        <li><a class="game" href="sky-stack/" style="--c1: linear-gradient(180deg,#2b4a8a,#ff9a6a)"><span class="play">Play ▶</span><div class="game__art"><svg viewBox="0 0 100 70" aria-hidden="true"><path d="M0 6h100" stroke="#ffc857" stroke-width="4"/><path d="M50 6 62 22" stroke="#ddd" stroke-width="1.5"/><rect x="50" y="22" width="26" height="10" fill="#ffc857"/><rect x="36" y="58" width="28" height="11" fill="#ff7a59"/><rect x="38" y="47" width="28" height="11" fill="#4fd1b5"/><rect x="35" y="36" width="28" height="11" fill="#5b8cff"/></svg></div><div class="game__body"><h2>Sky Stack</h2><p>Drop swinging floors from the crane. Build the tallest tower.</p><span class="tag">One button · tap</span></div></a></li>
+        <li><a class="game" href="paper-plane/" style="--c1: linear-gradient(180deg,#5b8cff,#ffd3a1)"><span class="play">Play ▶</span><div class="game__art"><svg viewBox="0 0 100 70" aria-hidden="true"><rect x="70" y="0" width="14" height="22" fill="#3fae7a"/><rect x="70" y="48" width="14" height="22" fill="#3fae7a"/><path d="M50 35 18 24 25 35 18 46Z" fill="#fff"/><path d="M50 35 25 35 18 46Z" fill="#d6dcea"/></svg></div><div class="game__body"><h2>Paper Plane Dash</h2><p>Tap to fly. Glide through the gaps between the pillars.</p><span class="tag">One button · tap</span></div></a></li>
+        <li><a class="game" href="marble-spiral/" style="--c1: radial-gradient(circle,#24304a,#101626)"><span class="play">Play ▶</span><div class="game__art"><svg viewBox="0 0 100 70" aria-hidden="true"><path d="M50 8a27 27 0 1 1-26 31 18 18 0 1 1 26 10" fill="none" stroke="#2c3858" stroke-width="9" stroke-linecap="round"/><g><circle cx="50" cy="8" r="5" fill="#ff5a4f"/><circle cx="64" cy="12" r="5" fill="#ff5a4f"/><circle cx="74" cy="22" r="5" fill="#ffc857"/><circle cx="77" cy="36" r="5" fill="#4fd1b5"/><circle cx="72" cy="50" r="5" fill="#5b8cff"/></g><circle cx="50" cy="38" r="8" fill="#2a3550" stroke="#ffc857" stroke-width="2"/></svg></div><div class="game__body"><h2>Marble Spiral</h2><p>Shoot marbles into the rolling chain. Match 3 to pop them.</p><span class="tag">Aim &amp; shoot · mouse or touch</span></div></a></li>
+        <li><a class="game" href="neon-getaway/" style="--c1: linear-gradient(135deg,#2a1d4a,#0f1830)"><span class="play">Play ▶</span><div class="game__art"><svg viewBox="0 0 100 70" aria-hidden="true"><rect x="0" y="28" width="100" height="16" fill="#20232e"/><rect x="10" y="35" width="10" height="2" fill="#e8d36a"/><rect x="40" y="35" width="10" height="2" fill="#e8d36a"/><rect x="70" y="35" width="10" height="2" fill="#e8d36a"/><rect x="0" y="4" width="30" height="20" fill="#3a2f5c"/><rect x="36" y="4" width="28" height="20" fill="#2c4a6e"/><rect x="0" y="4" width="30" height="3" fill="#ff4fd8"/><rect x="60" y="30" width="20" height="12" fill="#ff4fd8"/><rect x="24" y="30" width="20" height="12" fill="#f1f1f1"/><rect x="30" y="30" width="4" height="6" fill="#ff3b3b"/><rect x="30" y="36" width="4" height="6" fill="#3b7bff"/><rect x="44" y="50" width="12" height="10" fill="#c9a227"/></svg></div><div class="game__body"><h2>Neon Getaway</h2><p>16-bit city chase. Grab the cash and escape the police.</p><span class="tag">Driving · keyboard or touch</span></div></a></li>
+      </ul>
+    </main>
+    <footer class="wrap foot">Arcade by Dustin Clarence Costo · <a href="https://dustinclarence.github.io/portfolio/" style="color: inherit">Back to my portfolio</a></footer>
+  </body>
+</html>

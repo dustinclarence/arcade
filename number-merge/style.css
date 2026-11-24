@@ -1,0 +1,19 @@
+.grid-wrap { max-width: 480px; aspect-ratio: 1; padding: 12px; background: #2a3247; }
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 100%; height: 100%; touch-action: none; }
+.tile { display: grid; place-items: center; border-radius: 12px; background: rgba(255, 255, 255, 0.06); font-family: var(--display); font-weight: 700; font-size: clamp(1.4rem, 6vw, 2.4rem); color: #1b1408; user-select: none; }
+.tile.new { animation: pop-in 0.18s ease-out; }
+.tile.merged { animation: pop 0.2s ease-out; }
+.tile[data-v='2'] { background: #f3ece2; }
+.tile[data-v='4'] { background: #f1dfc0; }
+.tile[data-v='8'] { background: #ffb27a; color: #fff; }
+.tile[data-v='16'] { background: #ff9157; color: #fff; }
+.tile[data-v='32'] { background: #ff7259; color: #fff; }
+.tile[data-v='64'] { background: #f2503b; color: #fff; }
+.tile[data-v='128'] { background: #f3d26c; color: #fff; font-size: clamp(1.2rem, 5vw, 2rem); }
+.tile[data-v='256'] { background: #f2cb52; color: #fff; font-size: clamp(1.2rem, 5vw, 2rem); }
+.tile[data-v='512'] { background: #4fd1b5; color: #fff; font-size: clamp(1.2rem, 5vw, 2rem); }
+.tile[data-v='1024'] { background: #3db0e8; color: #fff; font-size: clamp(1rem, 4vw, 1.6rem); }
+.tile[data-v='2048'] { background: #7b6cff; color: #fff; font-size: clamp(1rem, 4vw, 1.6rem); box-shadow: 0 0 24px rgba(123, 108, 255, 0.7); }
+.tile.big { background: #1b1f2e; color: #ffc857; font-size: clamp(0.9rem, 3.4vw, 1.4rem); }
+@keyframes pop-in { from { transform: scale(0.3); opacity: 0; } }
+@keyframes pop { 50% { transform: scale(1.15); } }

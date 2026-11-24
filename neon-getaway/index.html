@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Neon Getaway · Arcade</title>
+    <meta name="description" content="A 16-bit style top-down city chase game: grab the cash, escape the police." />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../shared.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="top wrap">
+      <div class="top__row">
+        <a class="back" href="../">← All games</a>
+      </div>
+      <h1 class="title">Neon <span>Getaway</span></h1>
+      <p class="tagline">A 16-bit style city chase. Drive around the neon city, grab the cash bags and escape the police before time runs out.</p>
+    </header>
+    <main class="wrap layout">
+      <section class="stage" aria-label="Game">
+        <div class="hud"><div class="chip"><span>Cash</span><b id="cash">$0</b></div><div class="chip"><span>Wanted</span><b id="wanted">☆☆☆</b></div><div class="chip"><span>Lives</span><b id="lives">3</b></div><div class="chip"><span>Time</span><b id="time">120</b></div></div>
+        <div class="screen">
+          <canvas id="game" width="640" height="480" aria-label="Game screen"></canvas>
+          <div class="overlay" id="overlay">
+            <h2 id="ov-title">Neon Getaway</h2>
+            <p id="ov-text">Drive with the arrow keys or WASD. On a phone, use the buttons below.</p>
+            <button type="button" class="btn btn--primary" id="start">Start the engine</button>
+          </div>
+        </div>
+        <p class="visually-hidden" id="sr" role="status"></p>
+        <div class="pad" aria-label="Touch controls">
+          <button type="button" class="up" data-dir="up" aria-label="Up">▲</button>
+          <button type="button" class="left" data-dir="left" aria-label="Left">◀</button>
+          <button type="button" class="down-btn" data-dir="down" aria-label="Down">▼</button>
+          <button type="button" class="right" data-dir="right" aria-label="Right">▶</button>
+        </div>
+      </section>
+      <aside class="panel">
+        <div class="card">
+          <h2>How to play</h2>
+          <ol class="steps">
+            <li>Press <b>Start the engine</b>.</li>
+            <li>Drive with the arrow keys or <kbd>W A S D</kbd> (phone: the arrow buttons).</li>
+            <li>Follow the yellow arrow to the next <b>cash bag</b> 💰.</li>
+            <li>Every bag raises your <b>wanted level</b>, and more police cars chase you.</li>
+            <li>If a police car catches you, you lose a life. Survive 2 minutes and bank as much cash as you can!</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h2>Controls</h2>
+          <dl class="keys">
+            <div><dt>Accelerate</dt><dd><kbd>↑</kbd> / <kbd>W</kbd></dd></div>
+            <div><dt>Reverse / brake</dt><dd><kbd>↓</kbd> / <kbd>S</kbd></dd></div>
+            <div><dt>Steer</dt><dd><kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd></dd></div>
+            <div><dt>Pause</dt><dd><kbd>P</kbd></dd></div>
+          </dl>
+        </div>
+
+      </aside>
+    </main>
+    <footer class="wrap foot">Part of the Arcade by Dustin Clarence Costo.</footer>
+    <script type="module" src="game.js"></script>
+  </body>
+</html>

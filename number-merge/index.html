@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Number Merge · Arcade</title>
+    <meta name="description" content="Slide and merge matching number tiles to reach 2048." />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../shared.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="top wrap">
+      <div class="top__row">
+        <a class="back" href="../">← All games</a>
+      </div>
+      <h1 class="title">Number <span>Merge</span></h1>
+      <p class="tagline">Slide the tiles. When two tiles with the same number touch, they merge into one. Try to reach 2048!</p>
+    </header>
+    <main class="wrap layout">
+      <section class="stage" aria-label="Game">
+        <div class="hud"><div class="chip"><span>Score</span><b id="score">0</b></div><div class="chip"><span>Best</span><b id="best">0</b></div></div>
+        <p class="status" id="status" role="status">Use the arrow keys or swipe to slide the tiles.</p>
+        <div class="screen grid-wrap"><div class="grid" id="grid" aria-label="Number tiles"></div>
+          <div class="overlay" id="overlay" hidden><h2 id="ov-title">Game over</h2><p id="ov-text"></p><button type="button" class="btn btn--primary" id="again">Try again</button></div>
+        </div>
+        <div class="pad" aria-label="Touch controls">
+          <button type="button" class="up" data-dir="up" aria-label="Up">▲</button>
+          <button type="button" class="left" data-dir="left" aria-label="Left">◀</button>
+          <button type="button" class="down-btn" data-dir="down" aria-label="Down">▼</button>
+          <button type="button" class="right" data-dir="right" aria-label="Right">▶</button>
+        </div>
+      </section>
+      <aside class="panel">
+        <div class="card">
+          <h2>How to play</h2>
+          <ol class="steps">
+            <li>Slide all tiles <b>up, down, left or right</b>.</li>
+            <li>Two tiles with the same number merge: 2 + 2 = 4, 4 + 4 = 8 …</li>
+            <li>A new tile appears after every move.</li>
+            <li>Reach the <b>2048</b> tile to win (you can keep going).</li>
+            <li>The game ends when no moves are left. Use <b>Undo</b> once per move.</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h2>Controls</h2>
+          <dl class="keys">
+            <div><dt>Slide</dt><dd><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> or <kbd>W A S D</kbd></dd></div>
+            <div><dt>Phone</dt><dd>Swipe on the board</dd></div>
+            <div><dt>Undo</dt><dd><kbd>U</kbd></dd></div>
+          </dl>
+        </div>
+        <div class="card">
+          <h2>Game options</h2>
+          <div class="row"><button type="button" class="btn btn--primary" id="new">New game</button><button type="button" class="btn" id="undo">Undo</button></div>
+        </div>
+      </aside>
+    </main>
+    <footer class="wrap foot">Part of the Arcade by Dustin Clarence Costo.</footer>
+    <script type="module" src="game.js"></script>
+  </body>
+</html>
