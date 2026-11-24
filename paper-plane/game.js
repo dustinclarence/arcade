@@ -203,3 +203,17 @@ document.addEventListener('keydown', (e) => {
 });
 reset();
 requestAnimationFrame(loop);
+
+
+// ?demo=1 shows a still mid-game scene (used for the portfolio preview image).
+if (new URLSearchParams(location.search).get('demo') === '1') {
+  reset();
+  state = 'demo';
+  score = 7;
+  $('score').textContent = score;
+  plane.y = 300;
+  plane.vy = -120;
+  pillars = [{ x: 190, top: 200, gap: 190, passed: false }, { x: 430, top: 140, gap: 190, passed: false }];
+  scroll = 300;
+  $('overlay').hidden = true;
+}

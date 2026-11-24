@@ -165,3 +165,15 @@ document.querySelectorAll('[data-speed]').forEach((b) =>
 );
 reset();
 draw();
+
+
+// ?demo=1 shows a still mid-game scene (used for the portfolio preview image).
+if (new URLSearchParams(location.search).get('demo') === '1') {
+  snake = [[12, 8], [11, 8], [10, 8], [9, 8], [9, 9], [9, 10], [9, 11], [10, 11], [11, 11], [12, 11], [13, 11], [13, 12], [13, 13]];
+  dir = 'right';
+  food = [15, 8];
+  score = 100;
+  $('score').textContent = score;
+  $('overlay').hidden = true;
+  draw();
+}

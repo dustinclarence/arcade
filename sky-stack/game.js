@@ -247,3 +247,18 @@ document.addEventListener('keydown', (e) => {
 });
 reset();
 raf = requestAnimationFrame(loop);
+
+
+// ?demo=1 shows a still mid-game scene (used for the portfolio preview image).
+if (new URLSearchParams(location.search).get('demo') === '1') {
+  reset();
+  const offs = [0, 6, -4, 10, 2, -8, 5];
+  offs.forEach((o, i) => tower.push({ x: W / 2 + o, color: PALETTE[i % PALETTE.length] }));
+  camera = camTarget = floors() * BH;
+  swingT = 0.55;
+  state = 'play';
+  updateHud();
+  $('overlay').hidden = true;
+  cancelAnimationFrame(raf);
+  draw();
+}

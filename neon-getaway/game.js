@@ -415,3 +415,22 @@ reset();
 distTimer = 0;
 requestAnimationFrame(loop);
 window.__city = { map, solidAt, peek: () => ({ car, bag, cops }) };
+
+
+// ?demo=1 shows a still mid-game scene (used for the portfolio preview image).
+if (new URLSearchParams(location.search).get('demo') === '1') {
+  reset();
+  bags = 3;
+  cash = 1150;
+  timeLeft = 87;
+  car = { x: 11 * T, y: 8 * T, a: 0, v: 0 };
+  invuln = 0;
+  bag = { x: 15 * T, y: 8 * T };
+  cops = [
+    { x: 6 * T, y: 8 * T, tx: 6, ty: 8, a: 0 },
+    { x: 8 * T, y: 4 * T, tx: 8, ty: 4, a: Math.PI / 2 },
+  ];
+  updateHud();
+  state = 'demo';
+  $('overlay').hidden = true;
+}
