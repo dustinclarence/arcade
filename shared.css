@@ -115,3 +115,5 @@ kbd { display: inline-block; min-width: 1.7rem; padding: 0.1rem 0.45rem; border-
 .foot { padding: 0 0 2rem; color: var(--muted); font-size: 0.85rem; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+.subtitle { display: block; margin-top: 0.3rem; font-size: 0.42em; font-weight: 600; color: var(--muted); letter-spacing: 0.02em; }

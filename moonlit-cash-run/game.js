@@ -1,4 +1,4 @@
-// Neon Getaway — 16-bit style top-down city chase.
+// Moonlit Cash Run — 16-bit style top-down city chase.
 const $ = (id) => document.getElementById(id);
 const canvas = $('game');
 const g = canvas.getContext('2d');

@@ -1,4 +1,4 @@
-// Dama (checkers): forced captures, multi-jumps, kings, computer opponent.
+// Dama (Filipino checkers): men capture both ways, flying kings, compulsory maximum capture.
 const $ = (id) => document.getElementById(id);
 const boardEl = $('board');
 const RED = 'r', WHITE = 'w';
@@ -20,28 +20,43 @@ function newBoard() {
 }
 const clone = (b) => b.map((row) => row.slice());
 const inside = (r, c) => r >= 0 && r < 8 && c >= 0 && c < 8;
-function dirs(p) {
-  if (isKing(p)) return [[-1, -1], [-1, 1], [1, -1], [1, 1]];
-  return isRed(p) ? [[-1, -1], [-1, 1]] : [[1, -1], [1, 1]];
-}
+const DIAGS = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+// Ordinary pieces ("men") step diagonally forward only.
+const forward = (p) => (isRed(p) ? [[-1, -1], [-1, 1]] : [[1, -1], [1, 1]]);
 
-// All full capture sequences starting from (r,c).
-function jumps(b, r, c, p, path = [], caps = []) {
+/*
+  Filipino Dama capture rules used in this version:
+  - Men capture forward AND backward by jumping an adjacent opponent.
+  - A king ("dama") is a flying king: it moves any distance along an open
+    diagonal, and captures by jumping one opponent piece at any distance,
+    landing on any empty square beyond it.
+  - Captured pieces stay on the board until the whole move ends, so they
+    cannot be jumped twice and they block the path.
+  - A capture sequence continues as long as captures are possible.
+  - A man is crowned only if its move ENDS on the far row.
+*/
+function captureSeqs(b, r, c, p, caps, path) {
   const out = [];
-  for (const [dr, dc] of dirs(p)) {
-    const mr = r + dr, mc = c + dc, lr = r + 2 * dr, lc = c + 2 * dc;
-    if (!inside(lr, lc) || b[lr][lc] || !b[mr][mc] || colorOf(b[mr][mc]) === colorOf(p)) continue;
-    if (caps.some(([a, d]) => a === mr && d === mc)) continue;
-    const nb = clone(b);
-    nb[r][c] = null;
-    nb[mr][mc] = null;
-    const promote = !isKing(p) && ((isRed(p) && lr === 0) || (!isRed(p) && lr === 7));
-    const np = promote ? p.toUpperCase() : p;
-    nb[lr][lc] = np;
-    const seq = { path: [...path, [lr, lc]], caps: [...caps, [mr, mc]] };
-    const more = promote ? [] : jumps(nb, lr, lc, np, seq.path, seq.caps);
-    if (more.length) out.push(...more);
-    else out.push(seq);
+  const isCap = (rr, cc) => caps.some(([a, d]) => a === rr && d === cc);
+  for (const [dr, dc] of DIAGS) {
+    if (isKing(p)) {
+      let rr = r + dr, cc = c + dc;
+      while (inside(rr, cc) && !b[rr][cc]) { rr += dr; cc += dc; }
+      if (!inside(rr, cc) || colorOf(b[rr][cc]) === colorOf(p) || isCap(rr, cc)) continue;
+      let lr = rr + dr, lc = cc + dc;
+      while (inside(lr, lc) && !b[lr][lc]) {
+        const seq = { caps: [...caps, [rr, cc]], path: [...path, [lr, lc]] };
+        const more = captureSeqs(b, lr, lc, p, seq.caps, seq.path);
+        out.push(...(more.length ? more : [seq]));
+        lr += dr; lc += dc;
+      }
+    } else {
+      const mr = r + dr, mc = c + dc, lr = r + 2 * dr, lc = c + 2 * dc;
+      if (!inside(lr, lc) || b[lr][lc] || !b[mr][mc] || colorOf(b[mr][mc]) === colorOf(p) || isCap(mr, mc)) continue;
+      const seq = { caps: [...caps, [mr, mc]], path: [...path, [lr, lc]] };
+      const more = captureSeqs(b, lr, lc, p, seq.caps, seq.path);
+      out.push(...(more.length ? more : [seq]));
+    }
   }
   return out;
 }
@@ -52,13 +67,22 @@ function legalMoves(b, color) {
     for (let c = 0; c < 8; c++) {
       const p = b[r][c];
       if (colorOf(p) !== color) continue;
-      for (const j of jumps(b, r, c, p)) caps.push({ from: [r, c], ...j });
-      for (const [dr, dc] of dirs(p)) {
-        const nr = r + dr, nc = c + dc;
-        if (inside(nr, nc) && !b[nr][nc]) steps.push({ from: [r, c], path: [[nr, nc]], caps: [] });
+      const work = clone(b);
+      work[r][c] = null; // the moving piece leaves its square
+      for (const seq of captureSeqs(work, r, c, p, [], [])) caps.push({ from: [r, c], ...seq });
+      for (const [dr, dc] of isKing(p) ? DIAGS : forward(p)) {
+        let nr = r + dr, nc = c + dc;
+        while (inside(nr, nc) && !b[nr][nc]) {
+          steps.push({ from: [r, c], path: [[nr, nc]], caps: [] });
+          if (!isKing(p)) break;
+          nr += dr; nc += dc;
+        }
       }
     }
-  return caps.length ? caps : steps; // captures are compulsory
+  if (!caps.length) return steps;
+  // Captures are compulsory, and you must take the route that captures the most pieces.
+  const most = Math.max(...caps.map((m) => m.caps.length));
+  return caps.filter((m) => m.caps.length === most);
 }
 
 function apply(b, m) {
@@ -80,7 +104,7 @@ function evaluate(b) {
     for (let c = 0; c < 8; c++) {
       const p = b[r][c];
       if (!p) continue;
-      let v = isKing(p) ? 175 : 100;
+      let v = isKing(p) ? 260 : 100; // flying kings are very strong
       if (!isKing(p)) v += (isRed(p) ? 7 - r : r) * 4; // advancing men
       if (c === 0 || c === 7) v += 4;
       s += isRed(p) ? -v : v; // positive is good for White (the computer)
@@ -111,7 +135,7 @@ function search(b, depth, color, alpha, beta) {
 function cpuMove() {
   const moves = legalMoves(board, WHITE);
   if (level === 'easy' && Math.random() < 0.35) return moves[Math.floor(Math.random() * moves.length)];
-  const depth = level === 'hard' ? 6 : 2;
+  const depth = level === 'hard' ? 5 : 2;
   let best = null, bestV = -Infinity;
   for (const m of moves) {
     const v = search(apply(board, m), depth - 1, RED, -Infinity, Infinity) + Math.random();
@@ -192,7 +216,7 @@ function checkEnd() {
   const moves = legalMoves(board, turn);
   if (moves.length) {
     const who = mode === 'cpu' ? (turn === RED ? 'Your turn.' : 'Computer to move.') : `${turn === RED ? 'Red' : 'White'} to move.`;
-    setStatus(moves[0].caps.length && isHumanTurn() ? `${who} You must capture (pieces with a yellow ring).` : who);
+    setStatus(moves[0].caps.length && isHumanTurn() ? `${who} You must capture, taking the most pieces you can (pieces with a yellow ring).` : who);
     return;
   }
   over = true;
@@ -216,7 +240,7 @@ boardEl.addEventListener('click', (e) => {
       setStatus('Now click a green dot to move.');
     } else {
       selected = null;
-      setStatus(moves[0]?.caps.length ? 'You must capture! Choose a piece with a yellow ring.' : 'That piece cannot move. Pick another one.');
+      setStatus(moves[0]?.caps.length ? 'You must capture! Choose a piece with a yellow ring (it takes the most pieces).' : 'That piece cannot move. Pick another one.');
     }
   } else selected = null;
   render();
