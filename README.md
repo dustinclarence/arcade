@@ -14,7 +14,7 @@ Nine free browser games. No download, no sign-up.
 | [Sky Stack](https://dustinclarence.github.io/arcade/sky-stack/) | Drop swinging floors from a crane to build the tallest tower. |
 | [Paper Plane Dash](https://dustinclarence.github.io/arcade/paper-plane/) | One-tap flying through the gaps between pillars. |
 | [Marble Spiral](https://dustinclarence.github.io/arcade/marble-spiral/) | Shoot marbles into a rolling chain and match three to pop them. |
-| [Moonlit Cash Run](https://dustinclarence.github.io/arcade/moonlit-cash-run/) | 16-bit style city chase: grab the cash and escape the police. |
+| [Moonlit Cash Run](https://dustinclarence.github.io/arcade/moonlit-cash-run/) | 16-bit style chase through a big city with a camera that follows behind your car: grab the cash and escape the police. |
 
 Every game explains how to play on its own page and lists the controls it supports. Depending on the game, you can use a keyboard, mouse, touch screen, or a mix of these.
 

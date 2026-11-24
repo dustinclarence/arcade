@@ -18,7 +18,7 @@
         <a class="back" href="../">← All games</a>
       </div>
       <h1 class="title">Moonlit <span>Cash Run</span></h1>
-      <p class="tagline">A 16-bit style city chase. Drive around the neon city, grab the cash bags and escape the police before time runs out.</p>
+      <p class="tagline">A 16-bit style chase through a big city at night. Grab the cash bags and escape the police before time runs out.</p>
     </header>
     <main class="wrap layout">
       <section class="stage" aria-label="Game">
@@ -27,7 +27,7 @@
           <canvas id="game" width="640" height="480" aria-label="Game screen"></canvas>
           <div class="overlay" id="overlay">
             <h2 id="ov-title">Moonlit Cash Run</h2>
-            <p id="ov-text">Drive with the arrow keys or WASD. On a phone, use the buttons below.</p>
+            <p id="ov-text">The camera follows behind your car: ↑ drives forward, ← → turn. On a phone, use the buttons below.</p>
             <button type="button" class="btn btn--primary" id="start">Start the engine</button>
           </div>
         </div>
@@ -44,22 +44,28 @@
           <h2>How to play</h2>
           <ol class="steps">
             <li>Press <b>Start the engine</b>.</li>
-            <li>Drive with the arrow keys or <kbd>W A S D</kbd> (phone: the arrow buttons).</li>
-            <li>Follow the yellow arrow to the next <b>cash bag</b> 💰.</li>
-            <li>Every bag raises your <b>wanted level</b>, and more police cars chase you.</li>
-            <li>If a police car catches you, you lose a life. Survive 2 minutes and bank as much cash as you can!</li>
+            <li>The camera follows <b>behind your car</b>, so <kbd>↑</kbd> always drives forward and <kbd>←</kbd> <kbd>→</kbd> turn the car.</li>
+            <li>Follow the <b>yellow arrow</b> and the minimap to the next <b>cash bag</b> 💰. The top-left box shows how far it is.</li>
+            <li>Every bag raises your <b>wanted level</b>, and more police cars chase you through the big city.</li>
+            <li>If a police car catches you, you lose a life. Bank as much cash as you can in 2½ minutes!</li>
           </ol>
         </div>
         <div class="card">
           <h2>Controls</h2>
           <dl class="keys">
-            <div><dt>Accelerate</dt><dd><kbd>↑</kbd> / <kbd>W</kbd></dd></div>
-            <div><dt>Reverse / brake</dt><dd><kbd>↓</kbd> / <kbd>S</kbd></dd></div>
-            <div><dt>Steer</dt><dd><kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd></dd></div>
+            <div><dt>Drive forward</dt><dd><kbd>↑</kbd> / <kbd>W</kbd></dd></div>
+            <div><dt>Brake / reverse</dt><dd><kbd>↓</kbd> / <kbd>S</kbd></dd></div>
+            <div><dt>Turn</dt><dd><kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd></dd></div>
+            <div><dt>Switch camera</dt><dd><kbd>C</kbd></dd></div>
             <div><dt>Pause</dt><dd><kbd>P</kbd></dd></div>
+            <div><dt>Phone</dt><dd>Arrow buttons below the game</dd></div>
           </dl>
         </div>
 
+        <div class="card">
+          <h2>Game options</h2>
+          <div class="field"><span id="lbl-camera">Camera</span><div class="seg" role="group" aria-labelledby="lbl-camera"><button type="button" data-camera="chase" aria-pressed="true">Behind the car</button><button type="button" data-camera="top" aria-pressed="false">Top-down</button></div></div>
+        </div>
       </aside>
     </main>
     <footer class="wrap foot">Part of the Arcade by Dustin Clarence Costo.</footer>

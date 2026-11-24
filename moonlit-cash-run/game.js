@@ -1,22 +1,25 @@
-// Moonlit Cash Run — 16-bit style top-down city chase.
+// Moonlit Cash Run — 16-bit style city chase with a big map and a chase camera.
 const $ = (id) => document.getElementById(id);
 const canvas = $('game');
 const g = canvas.getContext('2d');
 g.imageSmoothingEnabled = false;
 const VW = canvas.width, VH = canvas.height;
-const T = 48, MAP = 43; // tile size and map size (tiles)
-const ROUND_TIME = 120;
+const T = 48; // tile size in pixels
+const MAP = 99; // 99 x 99 tiles: 14 x 14 city blocks
+const ROUND_TIME = 150;
 
 /* ---------- city map ---------- */
-// 0 = road, 1 = building, 2 = park
+// 0 = road, 1 = building, 2 = park, 3 = river
 const map = [];
 const BUILD_COLORS = ['#3a2f5c', '#2c4a6e', '#5a2f4a', '#2f5a52', '#4a3f2c', '#3c3a66'];
 const NEON = ['#ff4fd8', '#4ff0ff', '#ffd84f', '#7dff6a', '#ff6a4f'];
+const RIVER = [45, 46, 47]; // rows of water; the roads that cross them become bridges
 for (let y = 0; y < MAP; y++) {
   map.push([]);
   for (let x = 0; x < MAP; x++) {
     const road = x % 7 < 2 || y % 7 < 2;
     if (road) map[y].push(0);
+    else if (RIVER.includes(y)) map[y].push(3);
     else {
       const bx = Math.floor(x / 7), by = Math.floor(y / 7);
       map[y].push((bx * 3 + by * 5) % 7 === 0 ? 2 : 1);
@@ -30,8 +33,13 @@ for (let y = 0; y < MAP; y++) for (let x = 0; x < MAP; x++) if (!map[y][x]) road
 const tileCenter = (tx, ty) => ({ x: tx * T + T / 2, y: ty * T + T / 2 });
 
 /* ---------- state ---------- */
-let state = 'ready', car, cops, bag, cash, bags, lives, timeLeft, invuln, dist, distTimer, lastTime = 0, keys = {}, popups, sirenT = 0;
-const START = { x: T, y: T * 1 + T / 2 };
+let state = 'ready', car, cops, bag, cash, bags, lives, timeLeft, invuln, dist, distTimer = 0, lastTime = 0, keys = {}, popups, sirenT = 0;
+let camMode = 'chase'; // 'chase' = behind the car, 'top' = classic top-down
+let camAngle = -Math.PI / 2;
+try {
+  if (localStorage.getItem('cashrun-camera') === 'top') camMode = 'top';
+} catch { /* storage blocked */ }
+const START = { x: 7 * T + T / 2, y: T }; // on the first east-west road
 
 function reset() {
   cash = 0;
@@ -44,7 +52,8 @@ function reset() {
   updateHud();
 }
 function respawn() {
-  car = { x: START.x + T * 3, y: T, a: 0, v: 0 };
+  car = { x: START.x + T * 3, y: START.y, a: 0, v: 0 };
+  camAngle = car.a;
   invuln = 2;
   cops = [];
   syncCops();
@@ -56,27 +65,29 @@ function updateHud() {
   $('lives').textContent = '♥'.repeat(lives) || '0';
   $('time').textContent = Math.ceil(timeLeft);
 }
-function farRoadTile(minDist) {
-  for (let i = 0; i < 200; i++) {
+// A random road tile between minTiles and maxTiles away from the car.
+function roadTileBetween(minTiles, maxTiles) {
+  for (let i = 0; i < 400; i++) {
     const [tx, ty] = roadTiles[Math.floor(Math.random() * roadTiles.length)];
     const c = tileCenter(tx, ty);
-    if (Math.hypot(c.x - car.x, c.y - car.y) > minDist) return [tx, ty];
+    const d = Math.hypot(c.x - car.x, c.y - car.y) / T;
+    if (d >= minTiles && d <= maxTiles) return [tx, ty];
   }
-  return roadTiles[0];
+  return roadTiles[Math.floor(Math.random() * roadTiles.length)];
 }
 function placeBag() {
-  const [tx, ty] = farRoadTile(T * 10);
+  const [tx, ty] = roadTileBetween(9, 22);
   bag = tileCenter(tx, ty);
 }
 function syncCops() {
   while (cops.length < wanted()) {
-    const [tx, ty] = farRoadTile(T * 12);
+    const [tx, ty] = roadTileBetween(13, 26);
     const c = tileCenter(tx, ty);
     cops.push({ x: c.x, y: c.y, tx, ty, a: 0 });
   }
 }
 
-/* ---------- police pathfinding (distance field from the player) ---------- */
+/* ---------- police pathfinding (breadth-first search from the player) ---------- */
 function buildDistanceField() {
   dist = Array.from({ length: MAP }, () => new Array(MAP).fill(Infinity));
   const sx = Math.max(0, Math.min(MAP - 1, Math.floor(car.x / T))), sy = Math.max(0, Math.min(MAP - 1, Math.floor(car.y / T)));
@@ -102,19 +113,26 @@ function update(dt) {
   if (timeLeft <= 0) return endGame(true);
 
   // player car
-  const up = keys.up, down = keys.down, left = keys.left, right = keys.right;
-  const ACC = 420, MAX = 280, REV = -140;
-  if (up) car.v = Math.min(MAX, car.v + ACC * dt);
-  else if (down) car.v = Math.max(REV, car.v - ACC * 1.3 * dt);
+  const ACC = 430, MAX = 290, REV = -150;
+  if (keys.up) car.v = Math.min(MAX, car.v + ACC * dt);
+  else if (keys.down) car.v = Math.max(REV, car.v - ACC * 1.4 * dt);
   else car.v *= Math.pow(0.35, dt);
-  const steer = (right ? 1 : 0) - (left ? 1 : 0);
-  car.a += steer * 3.1 * dt * Math.max(-1, Math.min(1, car.v / 120));
+  const steer = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+  // steering strength grows with speed and flips when reversing, like a real car
+  car.a += steer * 2.8 * dt * Math.max(-1, Math.min(1, car.v / 90));
   const nx = car.x + Math.cos(car.a) * car.v * dt, ny = car.y + Math.sin(car.a) * car.v * dt;
-  const corners = (x, y) => [[x + 12, y + 12], [x - 12, y + 12], [x + 12, y - 12], [x - 12, y - 12]];
+  const corners = (x, y) => [[x + 11, y + 11], [x - 11, y + 11], [x + 11, y - 11], [x - 11, y - 11]];
+  let bumped = false;
   if (!corners(nx, car.y).some(([x, y]) => solidAt(x, y))) car.x = nx;
-  else car.v *= -0.25;
+  else bumped = true;
   if (!corners(car.x, ny).some(([x, y]) => solidAt(x, y))) car.y = ny;
-  else car.v *= -0.25;
+  else bumped = true;
+  if (bumped) car.v *= 0.55; // slide along walls instead of bouncing back
+
+  // the chase camera turns smoothly to follow the car
+  let diff = car.a - camAngle;
+  diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+  camAngle += diff * Math.min(1, dt * 5);
 
   // cash bag
   if (Math.hypot(bag.x - car.x, bag.y - car.y) < 30) {
@@ -129,7 +147,7 @@ function update(dt) {
 
   // police
   distTimer -= dt;
-  if (distTimer <= 0) {
+  if (distTimer <= 0 || !dist) {
     buildDistanceField();
     distTimer = 0.25;
   }
@@ -154,17 +172,14 @@ function update(dt) {
     const step = Math.min(d, copSpeed * dt);
     c.x += (dx / d) * step;
     c.y += (dy / d) * step;
-    c.a = Math.atan2(dy, dx);
+    if (d > 0.5) c.a = Math.atan2(dy, dx);
     if (close) {
       c.tx = Math.floor(c.x / T);
       c.ty = Math.floor(c.y / T);
     }
     if (!invuln && Math.hypot(car.x - c.x, car.y - c.y) < 26) return busted();
   }
-  popups.forEach((p) => {
-    p.life -= dt;
-    p.y -= dt * 30;
-  });
+  popups.forEach((p) => (p.life -= dt));
   popups = popups.filter((p) => p.life > 0);
   updateHud();
 }
@@ -189,33 +204,70 @@ function endGame(survived) {
   $('start').focus();
 }
 
-/* ---------- drawing ---------- */
-function drawCity(camX, camY) {
-  const x0 = Math.floor(camX / T), y0 = Math.floor(camY / T);
-  for (let ty = y0 - 1; ty <= y0 + VH / T + 1; ty++)
-    for (let tx = x0 - 1; tx <= x0 + VW / T + 1; tx++) {
-      const sx = tx * T - camX, sy = ty * T - camY;
+/* ---------- camera ---------- */
+// Chase camera: the car sits low on the screen, pointing up, and the city turns around it.
+const CHASE_X = VW / 2, CHASE_Y = VH * 0.68;
+function applyCamera() {
+  if (camMode === 'chase') {
+    g.translate(CHASE_X, CHASE_Y);
+    g.rotate(-camAngle - Math.PI / 2);
+    g.translate(-car.x, -car.y);
+  } else {
+    const camX = Math.max(0, Math.min(MAP * T - VW, car.x - VW / 2));
+    const camY = Math.max(0, Math.min(MAP * T - VH, car.y - VH / 2));
+    g.translate(-camX, -camY);
+  }
+}
+function worldToScreen(x, y) {
+  if (camMode === 'chase') {
+    const a = -camAngle - Math.PI / 2, dx = x - car.x, dy = y - car.y;
+    return { x: CHASE_X + dx * Math.cos(a) - dy * Math.sin(a), y: CHASE_Y + dx * Math.sin(a) + dy * Math.cos(a) };
+  }
+  const camX = Math.max(0, Math.min(MAP * T - VW, car.x - VW / 2));
+  const camY = Math.max(0, Math.min(MAP * T - VH, car.y - VH / 2));
+  return { x: x - camX, y: y - camY };
+}
+
+/* ---------- drawing (world coordinates) ---------- */
+function drawCity() {
+  const reach = Math.hypot(VW, VH) * 0.85; // enough to cover the rotated view
+  const x0 = Math.floor((car.x - reach) / T), x1 = Math.ceil((car.x + reach) / T);
+  const y0 = Math.floor((car.y - reach) / T), y1 = Math.ceil((car.y + reach) / T);
+  for (let ty = y0; ty <= y1; ty++)
+    for (let tx = x0; tx <= x1; tx++) {
+      const sx = tx * T, sy = ty * T;
       if (tx < 0 || ty < 0 || tx >= MAP || ty >= MAP) {
         g.fillStyle = '#05070d';
-        g.fillRect(sx, sy, T, T);
+        g.fillRect(sx, sy, T + 1, T + 1);
         continue;
       }
       const t = map[ty][tx];
       if (t === 0) {
-        g.fillStyle = '#20232e';
-        g.fillRect(sx, sy, T, T);
-        // lane markings in the middle of each 2-tile-wide road
+        const bridge = RIVER.includes(ty);
+        g.fillStyle = bridge ? '#3a3340' : '#20232e';
+        g.fillRect(sx, sy, T + 1, T + 1);
+        if (bridge) {
+          g.fillStyle = '#8a7a6a';
+          if (tx % 7 === 0) g.fillRect(sx, sy, 4, T + 1);
+          if (tx % 7 === 1) g.fillRect(sx + T - 4, sy, 4, T + 1);
+        }
+        // dashed centre line along each 2-tile-wide road
         g.fillStyle = '#e8d36a';
-        if (ty % 7 === 1 && tx % 7 >= 2 && tx % 4 === 0) g.fillRect(sx + 8, sy - 2, 20, 4);
-        if (tx % 7 === 1 && ty % 7 >= 2 && ty % 4 === 0) g.fillRect(sx - 2, sy + 8, 4, 20);
+        if (ty % 7 === 1 && tx % 7 >= 2 && tx % 2 === 0) g.fillRect(sx + 10, sy - 2, 24, 4);
+        if (tx % 7 === 1 && ty % 7 >= 2 && ty % 2 === 0) g.fillRect(sx - 2, sy + 10, 4, 24);
         if (tx % 7 < 2 && ty % 7 < 2) {
           g.fillStyle = 'rgba(255,255,255,0.08)';
           for (let i = 0; i < 6; i++) g.fillRect(sx + 4 + i * 7, sy + 4, 4, T - 8); // crossing
         }
+      } else if (t === 3) {
+        g.fillStyle = '#16365a';
+        g.fillRect(sx, sy, T + 1, T + 1);
+        g.fillStyle = 'rgba(120, 190, 255, 0.25)';
+        if ((tx + ty * 3) % 4 === 0) g.fillRect(sx + 8, sy + 14, 18, 3);
+        if ((tx * 5 + ty) % 5 === 0) g.fillRect(sx + 22, sy + 32, 14, 3);
       } else {
-        // sidewalk edge
-        g.fillStyle = '#6b6f80';
-        g.fillRect(sx, sy, T, T);
+        g.fillStyle = '#6b6f80'; // sidewalk
+        g.fillRect(sx, sy, T + 1, T + 1);
         const inner = 6;
         if (t === 2) {
           g.fillStyle = '#2f7d4a';
@@ -228,15 +280,12 @@ function drawCity(camX, camY) {
           }
         } else {
           const bx = Math.floor(tx / 7), by = Math.floor(ty / 7);
-          const col = BUILD_COLORS[(bx * 7 + by * 3) % BUILD_COLORS.length];
-          g.fillStyle = col;
+          g.fillStyle = BUILD_COLORS[(bx * 7 + by * 3) % BUILD_COLORS.length];
           g.fillRect(sx + inner, sy + inner, T - inner * 2, T - inner * 2);
           g.fillStyle = 'rgba(0,0,0,0.25)';
           g.fillRect(sx + inner, sy + T - inner - 6, T - inner * 2, 6);
-          // lit windows
           g.fillStyle = (tx * 13 + ty * 7) % 3 ? 'rgba(255, 220, 140, 0.75)' : 'rgba(120, 220, 255, 0.6)';
           for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) if ((tx + ty + i + j) % 3) g.fillRect(sx + 12 + i * 14, sy + 12 + j * 12, 8, 6);
-          // neon sign on some corners
           if (tx % 7 === 2 && ty % 7 === 2) {
             g.fillStyle = NEON[(bx + by) % NEON.length];
             g.fillRect(sx + 4, sy + 2, T - 8, 4);
@@ -247,7 +296,7 @@ function drawCity(camX, camY) {
 }
 function drawCar(x, y, a, body, roof, cop) {
   g.save();
-  g.translate(Math.round(x), Math.round(y));
+  g.translate(x, y);
   g.rotate(a);
   g.fillStyle = 'rgba(0,0,0,0.35)';
   g.fillRect(-15, -9, 32, 20);
@@ -260,7 +309,17 @@ function drawCar(x, y, a, body, roof, cop) {
   g.fillStyle = '#ffef9a';
   g.fillRect(14, -9, 3, 4);
   g.fillRect(14, 5, 3, 4); // headlights
-  if (cop) {
+  if (!cop) {
+    // headlight beams light the road ahead
+    g.fillStyle = 'rgba(255, 240, 170, 0.12)';
+    g.beginPath();
+    g.moveTo(16, -8);
+    g.lineTo(90, -34);
+    g.lineTo(90, 34);
+    g.lineTo(16, 8);
+    g.closePath();
+    g.fill();
+  } else {
     const on = Math.floor(sirenT * 8) % 2;
     g.fillStyle = on ? '#ff3b3b' : '#3b7bff';
     g.fillRect(-2, -8, 5, 8);
@@ -279,64 +338,100 @@ function drawBag(x, y, t) {
   g.fillRect(x - 10, y - 8 + bob, 20, 18);
   g.fillStyle = '#ffe07a';
   g.fillRect(x - 6, y - 12 + bob, 12, 6);
-  g.fillStyle = '#2f5a22';
-  g.font = '700 12px monospace';
-  g.textAlign = 'center';
-  g.fillText('$', x, y + 6 + bob);
 }
-function drawArrow(camX, camY) {
+function drawArrow() {
   const dx = bag.x - car.x, dy = bag.y - car.y;
-  if (Math.hypot(dx, dy) < 160) return;
+  if (Math.hypot(dx, dy) < 150) return;
   const a = Math.atan2(dy, dx);
-  const cx = car.x - camX + Math.cos(a) * 54, cy = car.y - camY + Math.sin(a) * 54;
   g.save();
-  g.translate(cx, cy);
+  g.translate(car.x + Math.cos(a) * 56, car.y + Math.sin(a) * 56);
   g.rotate(a);
   g.fillStyle = '#ffd84f';
+  g.strokeStyle = '#1b1406';
+  g.lineWidth = 2;
   g.beginPath();
-  g.moveTo(14, 0);
-  g.lineTo(-8, -10);
+  g.moveTo(16, 0);
+  g.lineTo(-9, -11);
   g.lineTo(-3, 0);
-  g.lineTo(-8, 10);
+  g.lineTo(-9, 11);
   g.closePath();
   g.fill();
+  g.stroke();
   g.restore();
 }
-function drawMinimap() {
-  const S = 2.6, size = MAP * S, ox = VW - size - 10, oy = VH - size - 10;
-  g.fillStyle = 'rgba(5, 7, 13, 0.75)';
-  g.fillRect(ox - 4, oy - 4, size + 8, size + 8);
+
+/* ---------- minimap (drawn once, then copied each frame) ---------- */
+const MINI = 140;
+const miniBase = document.createElement('canvas');
+miniBase.width = miniBase.height = MINI;
+(() => {
+  const m = miniBase.getContext('2d');
+  const S = MINI / MAP;
+  m.fillStyle = 'rgba(5, 7, 13, 0.85)';
+  m.fillRect(0, 0, MINI, MINI);
   for (let y = 0; y < MAP; y++)
-    for (let x = 0; x < MAP; x++)
-      if (!map[y][x]) {
-        g.fillStyle = '#3a3f52';
-        g.fillRect(ox + x * S, oy + y * S, S, S);
-      }
+    for (let x = 0; x < MAP; x++) {
+      if (map[y][x] === 0) m.fillStyle = '#4a5068';
+      else if (map[y][x] === 3) m.fillStyle = '#1f4f80';
+      else continue;
+      m.fillRect(x * S, y * S, Math.ceil(S), Math.ceil(S));
+    }
+})();
+function drawMinimap() {
+  const S = MINI / MAP, ox = VW - MINI - 10, oy = VH - MINI - 10;
+  g.drawImage(miniBase, ox, oy);
+  g.strokeStyle = 'rgba(255,255,255,0.25)';
+  g.strokeRect(ox - 0.5, oy - 0.5, MINI + 1, MINI + 1);
   const dot = (px, py, c, r) => {
     g.fillStyle = c;
     g.fillRect(ox + (px / T) * S - r, oy + (py / T) * S - r, r * 2, r * 2);
   };
   dot(bag.x, bag.y, '#ffd84f', 3);
-  cops.forEach((c) => dot(c.x, c.y, '#ff3b3b', 2));
-  dot(car.x, car.y, '#4ff0ff', 3);
+  cops.forEach((c) => dot(c.x, c.y, '#ff3b3b', 2.5));
+  // the player is a small arrow showing which way the car faces
+  g.save();
+  g.translate(ox + (car.x / T) * S, oy + (car.y / T) * S);
+  g.rotate(car.a);
+  g.fillStyle = '#4ff0ff';
+  g.beginPath();
+  g.moveTo(5, 0);
+  g.lineTo(-4, -3.5);
+  g.lineTo(-4, 3.5);
+  g.closePath();
+  g.fill();
+  g.restore();
 }
+
 function draw(t) {
-  const camX = Math.max(0, Math.min(MAP * T - VW, car.x - VW / 2));
-  const camY = Math.max(0, Math.min(MAP * T - VH, car.y - VH / 2));
-  drawCity(camX, camY);
-  drawBag(bag.x - camX, bag.y - camY, t);
-  cops.forEach((c) => drawCar(c.x - camX, c.y - camY, c.a, '#f1f1f1', '#1b1b22', true));
-  if (!(invuln > 0 && Math.floor(t / 100) % 2)) drawCar(car.x - camX, car.y - camY, car.a, '#ff4fd8', '#7a1f6a', false);
-  drawArrow(camX, camY);
+  g.fillStyle = '#05070d';
+  g.fillRect(0, 0, VW, VH);
+  g.save();
+  applyCamera();
+  drawCity();
+  drawBag(bag.x, bag.y, t);
+  cops.forEach((c) => drawCar(c.x, c.y, c.a, '#f1f1f1', '#1b1b22', true));
+  if (!(invuln > 0 && Math.floor(t / 100) % 2)) drawCar(car.x, car.y, car.a, '#ff4fd8', '#7a1f6a', false);
+  drawArrow();
+  g.restore();
+  // pop-up text is drawn upright on top of the rotated world
   popups.forEach((p) => {
-    g.globalAlpha = Math.max(0, p.life);
+    const s = worldToScreen(p.x, p.y);
+    g.globalAlpha = Math.max(0, Math.min(1, p.life));
     g.fillStyle = '#ffd84f';
-    g.font = '700 18px monospace';
+    g.font = '700 20px monospace';
     g.textAlign = 'center';
-    g.fillText(p.text, p.x - camX, p.y - camY);
+    g.fillText(p.text, s.x, s.y - (1.2 - p.life) * 40);
     g.globalAlpha = 1;
   });
   drawMinimap();
+  // distance to the next bag
+  const meters = Math.round(Math.hypot(bag.x - car.x, bag.y - car.y) / T) * 10;
+  g.fillStyle = 'rgba(5, 7, 13, 0.7)';
+  g.fillRect(10, 10, 170, 30);
+  g.fillStyle = '#ffd84f';
+  g.font = '700 15px monospace';
+  g.textAlign = 'left';
+  g.fillText(`Next cash: ${meters} m`, 20, 31);
   // vignette for a night-time feel
   const v = g.createRadialGradient(VW / 2, VH / 2, VH * 0.3, VW / 2, VH / 2, VW * 0.7);
   v.addColorStop(0, 'rgba(0,0,0,0)');
@@ -361,6 +456,7 @@ document.addEventListener('keydown', (e) => {
     keys[k] = true;
   }
   if (e.key.toLowerCase() === 'p') togglePause();
+  if (e.key.toLowerCase() === 'c') setCamera(camMode === 'chase' ? 'top' : 'chase');
 });
 document.addEventListener('keyup', (e) => {
   const k = KEYMAP[e.key] || KEYMAP[e.key.toLowerCase()];
@@ -383,6 +479,13 @@ document.querySelectorAll('.pad button').forEach((b) => {
   b.addEventListener('pointerleave', off);
   b.addEventListener('pointercancel', off);
 });
+function setCamera(mode) {
+  camMode = mode;
+  camAngle = car.a;
+  document.querySelectorAll('[data-camera]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.camera === mode)));
+  try { localStorage.setItem('cashrun-camera', mode); } catch { /* ignore */ }
+}
+document.querySelectorAll('[data-camera]').forEach((b) => b.addEventListener('click', () => setCamera(b.dataset.camera)));
 function togglePause() {
   if (state === 'play') {
     state = 'paused';
@@ -409,26 +512,27 @@ $('start').addEventListener('click', () => {
   }
   keys = {};
   $('overlay').hidden = true;
+  canvas.focus?.();
 });
-car = { x: START.x + T * 3, y: T, a: 0, v: 0 };
+car = { x: START.x + T * 3, y: START.y, a: 0, v: 0 };
 reset();
-distTimer = 0;
+setCamera(camMode);
 requestAnimationFrame(loop);
-window.__city = { map, solidAt, peek: () => ({ car, bag, cops }) };
-
+window.__city = { map, solidAt, peek: () => ({ car, bag, cops }), setCamera };
 
 // ?demo=1 shows a still mid-game scene (used for the portfolio preview image).
 if (new URLSearchParams(location.search).get('demo') === '1') {
   reset();
   bags = 3;
   cash = 1150;
-  timeLeft = 87;
-  car = { x: 11 * T, y: 8 * T, a: 0, v: 0 };
+  timeLeft = 112;
+  car = { x: 11 * T, y: 8 * T, a: -Math.PI / 2 + 0.15, v: 0 };
+  camAngle = car.a;
   invuln = 0;
-  bag = { x: 15 * T, y: 8 * T };
+  bag = { x: 8 * T, y: 2 * T };
   cops = [
-    { x: 6 * T, y: 8 * T, tx: 6, ty: 8, a: 0 },
-    { x: 8 * T, y: 4 * T, tx: 8, ty: 4, a: Math.PI / 2 },
+    { x: 8 * T, y: 13 * T, tx: 8, ty: 13, a: -Math.PI / 2 },
+    { x: 15 * T, y: 8 * T, tx: 15, ty: 8, a: Math.PI },
   ];
   updateHud();
   state = 'demo';
